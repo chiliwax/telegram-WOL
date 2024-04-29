@@ -38,7 +38,7 @@ async def poweron(update: telegram.Update, context: ContextTypes.DEFAULT_TYPE):
         INPROCESS = True
         send_magic_packet(str(PC_MAC_ADDR))
         await context.bot.send_message(chat_id=update.effective_chat.id, text=f'Trying starting PC...')
-        for value in range(RECONNECTION_ATEMPT):
+        for value in range(int(RECONNECTION_ATEMPT)):
             time.sleep(5)
             ip = getIpForMacAddr()
             if ip is not None:
