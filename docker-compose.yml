@@ -1,0 +1,9 @@
+version: "3.9"
+services:
+  telegram:
+    network_mode: host
+    container_name: wol_service
+    build:
+      context: .
+    volumes:
+      - .:/app
