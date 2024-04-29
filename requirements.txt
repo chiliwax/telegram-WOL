@@ -2,3 +2,4 @@ asyncio
 python-dotenv
 python-telegram-bot
 wakeonlan
+scapy
