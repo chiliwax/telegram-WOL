@@ -16,6 +16,9 @@ TELEGRAM_AUTHAURIZE_CHANNEL = os.getenv('TELEGRAM_AUTHAURIZE_CHANNEL')
 PC_MAC_ADDR = os.getenv('PC_MAC_ADDR')
 IP_RANGE = os.getenv('IP_RANGE')
 
+# IN PROCESS CHECKER
+INPROCESS = False
+
 # SYSLOG INSTANCE
 logger = logging.getLogger()
 
@@ -29,22 +32,21 @@ def initLogging(level: int = logging.INFO):
 # Telegram commands
 
 async def poweron(update: telegram.Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.message.chat_id == int(TELEGRAM_AUTHAURIZE_CHANNEL):
-        mgc_pckt = send_magic_packet(str(PC_MAC_ADDR))
-        print(PC_MAC_ADDR)
-        print(mgc_pckt)
+    if update.message.chat_id == int(TELEGRAM_AUTHAURIZE_CHANNEL) and INPROCESS == False:
+        INPROCESS = True
+        send_magic_packet(str(PC_MAC_ADDR))
         await context.bot.send_message(chat_id=update.effective_chat.id, text=f'Trying starting PC...')
         for value in range(5):
             asyncio.sleep(5)
             ip = getIpForMacAddr()
             if ip is not None:
                 await context.bot.send_message(chat_id=update.effective_chat.id, text=f'connected on {ip} !')
-                break
+                INPROCESS = False
+                return
             else:
                 await context.bot.send_message(chat_id=update.effective_chat.id, text=f'retrying ({value})...')
         await context.bot.send_message(chat_id=update.effective_chat.id, text=f'connexion timeout ! wait I use status or retry...')
-        
-        
+        INPROCESS = False
 
 async def status(update: telegram.Update, context: ContextTypes.DEFAULT_TYPE):
     if update.message.chat_id == int(TELEGRAM_AUTHAURIZE_CHANNEL):
