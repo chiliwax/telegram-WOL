@@ -87,7 +87,6 @@ def getIpForMacAddr(macAddr = PC_MAC_ADDR):
     responses, _ = srp(arp_request, timeout=2, verbose=False)
     # Iterate through responses
     for _, response in responses:
-        logger.log(logging.INFO, response.hwsrc)
         if response.hwsrc == macAddr.replace(".", ":").lower():
             return response.psrc  # Return the IP address if MAC address matches
     return None  # Return None if MAC address not found
