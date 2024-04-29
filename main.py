@@ -6,7 +6,7 @@ from telegram.ext import ApplicationBuilder, CallbackContext, CallbackQueryHandl
 from datetime import date
 from wakeonlan import send_magic_packet
 from scapy.all import srp, Ether, ARP
-import asyncio
+import time
 
 load_dotenv()
 # ENV CONSTANTS
@@ -15,6 +15,7 @@ TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
 TELEGRAM_AUTHAURIZE_CHANNEL = os.getenv('TELEGRAM_AUTHAURIZE_CHANNEL')
 PC_MAC_ADDR = os.getenv('PC_MAC_ADDR')
 IP_RANGE = os.getenv('IP_RANGE')
+RECONNECTION_ATEMPT = os.getenv('RECONNECTION_ATEMPT')
 
 # GLOBALS SET
 INPROCESS = False
@@ -37,15 +38,15 @@ async def poweron(update: telegram.Update, context: ContextTypes.DEFAULT_TYPE):
         INPROCESS = True
         send_magic_packet(str(PC_MAC_ADDR))
         await context.bot.send_message(chat_id=update.effective_chat.id, text=f'Trying starting PC...')
-        for value in range(5):
-            asyncio.sleep(5)
+        for value in range(RECONNECTION_ATEMPT):
+            time.sleep(5)
             ip = getIpForMacAddr()
             if ip is not None:
                 await context.bot.send_message(chat_id=update.effective_chat.id, text=f'connected on {ip} !')
                 INPROCESS = False
                 return
             else:
-                await context.bot.send_message(chat_id=update.effective_chat.id, text=f'retrying ({value})...')
+                await context.bot.send_message(chat_id=update.effective_chat.id, text=f'retrying ({RECONNECTION_ATEMPT - value})...')
         await context.bot.send_message(chat_id=update.effective_chat.id, text=f'connexion timeout ! wait I use status or retry...')
         INPROCESS = False
     else:
