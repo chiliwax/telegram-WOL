@@ -15,8 +15,7 @@ TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
 TELEGRAM_AUTHAURIZE_CHANNEL = os.getenv('TELEGRAM_AUTHAURIZE_CHANNEL')
 PC_MAC_ADDR = os.getenv('PC_MAC_ADDR')
 IP_RANGE = os.getenv('IP_RANGE')
-# GLOBALS
-global INPROCESS 
+
 # GLOBALS SET
 INPROCESS = False
 
@@ -33,6 +32,7 @@ def initLogging(level: int = logging.INFO):
 # Telegram commands
 
 async def poweron(update: telegram.Update, context: ContextTypes.DEFAULT_TYPE):
+    global INPROCESS 
     if update.message.chat_id == int(TELEGRAM_AUTHAURIZE_CHANNEL) and INPROCESS == False:
         INPROCESS = True
         send_magic_packet(str(PC_MAC_ADDR))
