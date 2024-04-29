@@ -15,8 +15,9 @@ TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
 TELEGRAM_AUTHAURIZE_CHANNEL = os.getenv('TELEGRAM_AUTHAURIZE_CHANNEL')
 PC_MAC_ADDR = os.getenv('PC_MAC_ADDR')
 IP_RANGE = os.getenv('IP_RANGE')
-
-# IN PROCESS CHECKER
+# GLOBALS
+global INPROCESS 
+# GLOBALS SET
 INPROCESS = False
 
 # SYSLOG INSTANCE
@@ -33,7 +34,6 @@ def initLogging(level: int = logging.INFO):
 
 async def poweron(update: telegram.Update, context: ContextTypes.DEFAULT_TYPE):
     if update.message.chat_id == int(TELEGRAM_AUTHAURIZE_CHANNEL) and INPROCESS == False:
-        global INPROCESS
         INPROCESS = True
         send_magic_packet(str(PC_MAC_ADDR))
         await context.bot.send_message(chat_id=update.effective_chat.id, text=f'Trying starting PC...')
