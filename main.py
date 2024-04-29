@@ -33,6 +33,7 @@ def initLogging(level: int = logging.INFO):
 
 async def poweron(update: telegram.Update, context: ContextTypes.DEFAULT_TYPE):
     if update.message.chat_id == int(TELEGRAM_AUTHAURIZE_CHANNEL) and INPROCESS == False:
+        global INPROCESS
         INPROCESS = True
         send_magic_packet(str(PC_MAC_ADDR))
         await context.bot.send_message(chat_id=update.effective_chat.id, text=f'Trying starting PC...')
@@ -47,6 +48,8 @@ async def poweron(update: telegram.Update, context: ContextTypes.DEFAULT_TYPE):
                 await context.bot.send_message(chat_id=update.effective_chat.id, text=f'retrying ({value})...')
         await context.bot.send_message(chat_id=update.effective_chat.id, text=f'connexion timeout ! wait I use status or retry...')
         INPROCESS = False
+    else:
+        await context.bot.send_message(chat_id=update.effective_chat.id, text=f"can't perform this operation now ")
 
 async def status(update: telegram.Update, context: ContextTypes.DEFAULT_TYPE):
     if update.message.chat_id == int(TELEGRAM_AUTHAURIZE_CHANNEL):
