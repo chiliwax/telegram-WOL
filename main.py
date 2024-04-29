@@ -46,7 +46,7 @@ async def poweron(update: telegram.Update, context: ContextTypes.DEFAULT_TYPE):
                 INPROCESS = False
                 return
             else:
-                await context.bot.send_message(chat_id=update.effective_chat.id, text=f'retrying ({RECONNECTION_ATEMPT - value})...')
+                await context.bot.send_message(chat_id=update.effective_chat.id, text=f'retrying ({int(RECONNECTION_ATEMPT) - value})...')
         await context.bot.send_message(chat_id=update.effective_chat.id, text=f'connexion timeout ! wait I use status or retry...')
         INPROCESS = False
     else:
