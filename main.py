@@ -5,8 +5,8 @@ from dotenv import load_dotenv
 from telegram.ext import ApplicationBuilder, CallbackContext, CallbackQueryHandler, CommandHandler, ContextTypes, MessageHandler, filters
 from datetime import date
 from wakeonlan import send_magic_packet
-import scanip.scanip as ipScanner
 from scapy.all import srp, Ether, ARP
+import asyncio
 
 load_dotenv()
 # ENV CONSTANTS
@@ -29,17 +29,28 @@ def initLogging(level: int = logging.INFO):
 # Telegram commands
 
 async def poweron(update: telegram.Update, context: ContextTypes.DEFAULT_TYPE):
-	if update.message.chat_id == int(TELEGRAM_AUTHAURIZE_CHANNEL):
-		mgc_pckt = send_magic_packet(str(PC_MAC_ADDR))
-		print(PC_MAC_ADDR)
-		print(mgc_pckt)
-		await context.bot.send_message(chat_id=update.effective_chat.id, text=f'PC IS STARTING')
-	pass
+    if update.message.chat_id == int(TELEGRAM_AUTHAURIZE_CHANNEL):
+        mgc_pckt = send_magic_packet(str(PC_MAC_ADDR))
+        print(PC_MAC_ADDR)
+        print(mgc_pckt)
+        await context.bot.send_message(chat_id=update.effective_chat.id, text=f'Trying starting PC...')
+        for value in range(5):
+            asyncio.sleep(5)
+            ip = getIpForMacAddr()
+            if ip is not None:
+                await context.bot.send_message(chat_id=update.effective_chat.id, text=f'connected on {ip} !')
+                break
+            else:
+                await context.bot.send_message(chat_id=update.effective_chat.id, text=f'retrying ({value})...')
+        await context.bot.send_message(chat_id=update.effective_chat.id, text=f'connexion timeout ! wait I use status or retry...')
+        
+        
 
 async def status(update: telegram.Update, context: ContextTypes.DEFAULT_TYPE):
-	if update.message.chat_id == int(TELEGRAM_AUTHAURIZE_CHANNEL):
-		await context.bot.send_message(chat_id=update.effective_chat.id, text=f'STATUS : not implemented yet !')
-	pass
+    if update.message.chat_id == int(TELEGRAM_AUTHAURIZE_CHANNEL):
+        ip = getIpForMacAddr()
+        alive = "alive" if ip is not None else "down"
+        await context.bot.send_message(chat_id=update.effective_chat.id, text=f'Host : {alive} on {ip}')
 
 async def echo(update: telegram.Update, context: ContextTypes.DEFAULT_TYPE):
     logger.info(f'receive {update.message.text}')
@@ -63,7 +74,7 @@ def runTelegramBot():
     application.run_polling()
     
 # Ip Scanning
-def getIpForMacAddr():
+def getIpForMacAddr(macAddr = PC_MAC_ADDR):
     # Craft an ARP request packet
     arp_request = Ether(dst="ff:ff:ff:ff:ff:ff") / ARP(pdst="192.168.1.0/24", hwdst="ff:ff:ff:ff:ff:ff")
     # Send the ARP request and wait for responses
@@ -71,7 +82,7 @@ def getIpForMacAddr():
     # Iterate through responses
     for _, response in responses:
         logger.log(logging.INFO, response.hwsrc)
-        if response.hwsrc == PC_MAC_ADDR.replace(".", ":").lower():
+        if response.hwsrc == macAddr.replace(".", ":").lower():
             return response.psrc  # Return the IP address if MAC address matches
     return None  # Return None if MAC address not found
     
@@ -80,8 +91,7 @@ def getIpForMacAddr():
 # Life Cycle
 def main():
     initLogging()
-    #runTelegramBot()
-    logger.log(logging.INFO, f"ip -> {getIpForMacAddr()}")
+    runTelegramBot()
 
 if __name__ == "__main__":
     main()
