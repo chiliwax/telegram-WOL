@@ -3,6 +3,7 @@ services:
   telegram:
     network_mode: host
     container_name: wol_service
+    restart: always
     build:
       context: .
     volumes:
