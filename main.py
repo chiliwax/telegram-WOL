@@ -14,6 +14,7 @@ BOT_NAME = os.getenv('BOT_NAME')
 TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
 TELEGRAM_AUTHAURIZE_CHANNEL = os.getenv('TELEGRAM_AUTHAURIZE_CHANNEL')
 PC_MAC_ADDR = os.getenv('PC_MAC_ADDR')
+MACOS_MAC_ADDR = os.getenv('MACOS_MAC_ADDR')
 IP_RANGE = os.getenv('IP_RANGE')
 RECONNECTION_ATEMPT = os.getenv('RECONNECTION_ATEMPT')
 
@@ -58,6 +59,32 @@ async def status(update: telegram.Update, context: ContextTypes.DEFAULT_TYPE):
         alive = "alive" if ip is not None else "down"
         await context.bot.send_message(chat_id=update.effective_chat.id, text=f'Host : {alive} on {ip}')
 
+async def poweronmac(update: telegram.Update, context: ContextTypes.DEFAULT_TYPE):
+    global INPROCESS 
+    if update.message.chat_id == int(TELEGRAM_AUTHAURIZE_CHANNEL) and INPROCESS == False:
+        INPROCESS = True
+        send_magic_packet(str(MACOS_MAC_ADDR))
+        await context.bot.send_message(chat_id=update.effective_chat.id, text=f'Trying starting MAC...')
+        for value in range(int(RECONNECTION_ATEMPT)):
+            time.sleep(5)
+            ip = getIpForMacAddr(str(MACOS_MAC_ADDR))
+            if ip is not None:
+                await context.bot.send_message(chat_id=update.effective_chat.id, text=f'connected on {ip} !')
+                INPROCESS = False
+                return
+            else:
+                await context.bot.send_message(chat_id=update.effective_chat.id, text=f'retrying ({int(RECONNECTION_ATEMPT) - value})...')
+        await context.bot.send_message(chat_id=update.effective_chat.id, text=f'connexion timeout ! wait I use status or retry...')
+        INPROCESS = False
+    else:
+        await context.bot.send_message(chat_id=update.effective_chat.id, text=f"can't perform this operation now ")
+
+async def statusmac(update: telegram.Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.message.chat_id == int(TELEGRAM_AUTHAURIZE_CHANNEL):
+        ip = getIpForMacAddr(str(MACOS_MAC_ADDR))
+        alive = "alive" if ip is not None else "down"
+        await context.bot.send_message(chat_id=update.effective_chat.id, text=f'Host : {alive} on {ip}')
+
 async def echo(update: telegram.Update, context: ContextTypes.DEFAULT_TYPE):
     logger.info(f'receive {update.message.text}')
     if update.message.chat_id == int(TELEGRAM_AUTHAURIZE_CHANNEL):
@@ -72,6 +99,8 @@ def runTelegramBot():
     # register commands
     application.add_handler(CommandHandler(poweron.__name__, poweron))
     application.add_handler(CommandHandler(status.__name__, status))
+    application.add_handler(CommandHandler(poweronmac.__name__, poweronmac))
+    application.add_handler(CommandHandler(statusmac.__name__, statusmac))
     application.add_handler(CommandHandler(kill.__name__, kill))
     # other commands
     application.add_handler(MessageHandler(
